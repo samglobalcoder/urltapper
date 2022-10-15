@@ -1,0 +1,22 @@
+spring:
+  main:
+    banner-mode: off
+  profiles:
+    active: dev
+  datasource:
+    driverClassName: org.postgresql.Driver
+    dialect: org.hibernate.dialect.PostgreSQLDialect
+    url: jdbc:postgresql://localhost:5432/url
+    username: sam
+    password:
+    jpa:
+      hibernate:
+        show-sql: true
+        ddl-auto: none
+
+
+
+
+
+
+
