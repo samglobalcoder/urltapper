@@ -13,7 +13,10 @@ spring:
       hibernate:
         show-sql: true
         ddl-auto: none
-
+  flyway:
+    baselineOnMigrate:true
+flyway:
+  locations: filesystem:src/main/resources/db/migration
 
 
 

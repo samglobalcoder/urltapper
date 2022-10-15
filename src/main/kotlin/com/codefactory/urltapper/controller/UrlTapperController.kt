@@ -4,8 +4,11 @@ import com.codefactory.urltapper.dto.UrlGetRequest
 import com.codefactory.urltapper.dto.UrlGetResponse
 import com.codefactory.urltapper.dto.UrlTapRequest
 import com.codefactory.urltapper.dto.UrlTapResponse
+import com.codefactory.urltapper.exception.ValidationException
+import com.codefactory.urltapper.service.IUrlTapperService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -27,7 +30,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @Tag(name = "UrlTapper Rest Api", description = "Tapping the length of the url and returning unique shortened url")
 @RequestMapping("/v1")
-class UrlTapperController {
+class UrlTapperController(@Autowired val tapperService: IUrlTapperService) {
 
     /**
      * This API method helps to reduce or tap the given link or url.
@@ -40,12 +43,11 @@ class UrlTapperController {
     @ResponseBody
     fun tapUrl(@RequestBody urlTapRequest: UrlTapRequest)
             : ResponseEntity<UrlTapResponse> {
-        val response = UrlTapResponse()
+        val response: UrlTapResponse
         if (urlTapRequest.longUrl.isEmpty()) {
-            //TODO: validation failure
-            return ResponseEntity<UrlTapResponse>(response, HttpStatus.BAD_REQUEST)
+            throw ValidationException(" Long url not found in the request")
         }
-        //TODO: Call the service
+        response = tapperService.doTapUrl(urlTapRequest)
         return ResponseEntity<UrlTapResponse>(response, HttpStatus.OK)
     }
 

@@ -4,14 +4,17 @@ import com.codefactory.urltapper.dto.UrlGetRequest
 import com.codefactory.urltapper.dto.UrlGetResponse
 import com.codefactory.urltapper.dto.UrlTapRequest
 import com.codefactory.urltapper.dto.UrlTapResponse
+import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
@@ -35,15 +38,25 @@ class UrlTapperAppIntegrationTests(
     var longUrl = "https://us05web.zoom.us/postattendee?mn=tPFBecg7Z7s1m4DrQWrsGNXXAtddXCpZuNrY.dTlMh5V3UFCeUohv&id=22"
 
 
+    @Autowired
+    lateinit var jdbcTemplate: JdbcTemplate
+
     companion object {
 
+        /**
+         * Container building logic.
+         */
         @Container
-        val container = PostgreSQLContainer<Nothing>("postgres").apply {
-            withDatabaseName("url")
-            withUsername("testcontainer")
-            withPassword("testcontainer")
-        }
+        val container = PostgreSQLContainer<Nothing>("postgres:14")
+            .apply {
+                withDatabaseName("url")
+                withUsername("testcontainer")
+                withPassword("testcontainer")
+            }
 
+        /**
+         * Test container properties initialization
+         */
         @JvmStatic
         @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
@@ -88,4 +101,12 @@ class UrlTapperAppIntegrationTests(
         assertNotNull(resObj)
         assertEquals(resObj.statusCode, HttpStatus.BAD_REQUEST)
     }
+
+    @Test
+    @Order(6)
+    fun `when database is connected then it should be Postgres version 14_5`() {
+        val actualDatabaseVersion = jdbcTemplate.queryForObject("SELECT version()", String::class.java)
+        actualDatabaseVersion shouldContain "PostgreSQL 14.5"
+    }
+
 }
