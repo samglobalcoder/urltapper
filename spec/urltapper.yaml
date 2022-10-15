@@ -13,7 +13,7 @@ paths:
   /v1/tapurl:
     post:
       tags:
-        - tapUrl
+        - UrlTapper Rest Api
       description: shorten the given long url
       operationId: tapUrl
       requestBody:
@@ -32,7 +32,7 @@ paths:
   /v1/geturl:
     post:
       tags:
-        - getUrl
+        - UrlTapper Rest Api
       description: retrieve the long url
       operationId: getUrl
       requestBody:
