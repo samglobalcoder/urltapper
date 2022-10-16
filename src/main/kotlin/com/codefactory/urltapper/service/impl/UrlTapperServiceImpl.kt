@@ -8,6 +8,7 @@ import com.codefactory.urltapper.repo.IUrlTapperRepository
 import com.codefactory.urltapper.service.IUrlTapperService
 import com.codefactory.urltapper.utils.UrlTapperHelper
 import org.springframework.stereotype.Service
+import java.util.*
 
 /**
  * This is the service implementation for invoking repository layer and processing various business logic.
@@ -31,19 +32,30 @@ class UrlTapperServiceImpl(
         //passing the long url and converting SHA256 string
         val hashedUrl = tapperHelper.hashBySHA256WithUTF8(urlTapRequest.longUrl)
         //verify the hashed value present in the database or not
-        val shortUrl = tapperRepository.findOneShortUrl(hashedUrl)
+        val existingUrlData = tapperRepository.findOneShortUrl(hashedUrl)
         //if the hashed value is not available in the database, then new record has to be saved
 
-        if (shortUrl.isEmpty) {
+        if (existingUrlData.isEmpty) {
             //saving the newly hashed value into database
             val tapperDAO = UrlDataDAO.mapToEntity(urlTapRequest, hashedUrl)
             //store the record
-            val urldata = tapperRepository.save(tapperDAO)
-            urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + urldata.id.toString().trim()
+            val currentUrlData = tapperRepository.save(tapperDAO)
+            urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + currentUrlData.id.toString().trim()
             return urlTapResponse
         }
-        urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + shortUrl.get().id.toString().trim()
+        urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + existingUrlData.get().id.toString().trim()
         return urlTapResponse
     }
 
+    /**
+     * This service method helps to retrieve the existing long link by hashed url.
+     * @param shortUrl This is the short url passed to retrieve long url.
+     */
+    override fun retrieveLongUrl(shortUrl: String): Optional<String> {
+        //get the hash value from the url
+        val uuidFromURL = shortUrl
+            .substring(UrlTapperConstants.URL_TAPPER_DOMAIN.length, shortUrl.length)
+        val id = UUID.fromString(uuidFromURL)
+        return tapperRepository.findOneLongUrlByUUID(id)
+    }
 }

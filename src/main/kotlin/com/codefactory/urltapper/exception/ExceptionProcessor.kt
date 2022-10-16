@@ -1,7 +1,6 @@
 package com.codefactory.urltapper.exception
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -17,9 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * @createdBy intelij
  */
 @RestControllerAdvice
-class ExceptionProcessor() : ResponseEntityExceptionHandler() {
-
-    private val logger = LogManager.getLogger(ExceptionProcessor::class)
+class ExceptionProcessor : ResponseEntityExceptionHandler() {
 
     /**
      * This method helps to handle very critical unhandled scenario,

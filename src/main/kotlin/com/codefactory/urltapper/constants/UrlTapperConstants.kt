@@ -8,6 +8,6 @@ package com.codefactory.urltapper.constants
  */
 object UrlTapperConstants {
 
-    const val URL_TAPPER_DOMAIN = "https://codefactory.com/"
+    const val URL_TAPPER_DOMAIN = "https://cf.com/"
 
 }

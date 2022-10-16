@@ -1,18 +1,21 @@
 package com.codefactory.urltapper.controller
 
-import com.codefactory.urltapper.dto.UrlGetRequest
-import com.codefactory.urltapper.dto.UrlGetResponse
+import com.codefactory.urltapper.constants.UrlTapperConstants
 import com.codefactory.urltapper.dto.UrlTapRequest
 import com.codefactory.urltapper.dto.UrlTapResponse
+import com.codefactory.urltapper.exception.DataNotFoundException
 import com.codefactory.urltapper.exception.ValidationException
 import com.codefactory.urltapper.service.IUrlTapperService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.net.URI
 
 /**
  * This is a rest controller which expose different functionality for the
@@ -40,35 +43,55 @@ class UrlTapperController(@Autowired val tapperService: IUrlTapperService) {
         description = "shorten the given long url",
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody()
     )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "if the long url successfully generated the short url"),
+        ApiResponse(responseCode = "400", description = "if the long url not found on the request")
+    )
     @ResponseBody
     fun tapUrl(@RequestBody urlTapRequest: UrlTapRequest)
             : ResponseEntity<UrlTapResponse> {
-        val response: UrlTapResponse
         if (urlTapRequest.longUrl.isEmpty()) {
             throw ValidationException(" Long url not found in the request")
         }
-        response = tapperService.doTapUrl(urlTapRequest)
+        val response: UrlTapResponse = tapperService.doTapUrl(urlTapRequest)
         return ResponseEntity<UrlTapResponse>(response, HttpStatus.OK)
     }
 
     /**
      * This API method helps to retrieve the long url based on hashed short url.
      */
-    @PostMapping(path = ["/geturl"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @GetMapping(path = ["/geturl"])
     @Operation(
         description = "retrieve the long url",
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody()
     )
+    @ApiResponses(
+        ApiResponse(
+            responseCode = "302",
+            description = "if the short url fetched and redirection happened successfully"
+        ),
+        ApiResponse(responseCode = "400", description = "if the shore url not found on the request"),
+        ApiResponse(responseCode = "404", description = "if the short url not found on the database")
+    )
     @ResponseBody
-    fun getUrl(@RequestBody urlGetRequest: UrlGetRequest)
-            : ResponseEntity<UrlGetResponse> {
-        val urlGetResponse = UrlGetResponse()
-        if (urlGetRequest.shortUrl.isEmpty()) {
-            //TODO: Validation Exception
-            return ResponseEntity<UrlGetResponse>(urlGetResponse, HttpStatus.BAD_REQUEST)
+    fun getUrl(@RequestParam shortUrl: String)
+            : ResponseEntity<String> {
+        if (shortUrl.isEmpty() ||
+            !shortUrl.startsWith(UrlTapperConstants.URL_TAPPER_DOMAIN)
+        ) {
+            throw ValidationException("Given short url is invalid")
         }
-        //TODO: Call the service
-        return ResponseEntity<UrlGetResponse>(urlGetResponse, HttpStatus.OK)
+        val longUrl = tapperService
+            .retrieveLongUrl(shortUrl.trim())
+        if (longUrl.isPresent) {
+            //url redirection happen in postman and not at swagger
+            return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(longUrl.get()))
+                .body("success")
+        } else {
+            //throw validation exception
+            throw DataNotFoundException(" Long link not found , please create new short link")
+        }
     }
 
 }

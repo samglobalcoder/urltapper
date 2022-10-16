@@ -6,6 +6,4 @@ package com.codefactory.urltapper.exception
  * @Date 15/10/22
  * @createdBy intelij
  */
-data class ErrorMessage(val message: String?) {
-
-}
+data class ErrorMessage(val message: String?)
