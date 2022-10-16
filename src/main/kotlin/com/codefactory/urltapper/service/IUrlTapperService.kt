@@ -3,6 +3,7 @@ package com.codefactory.urltapper.service
 
 import com.codefactory.urltapper.dto.UrlTapRequest
 import com.codefactory.urltapper.dto.UrlTapResponse
+import java.util.*
 
 /**
  * This interface helps to provide all the service methods for url data sending / retrieving to the repository.
@@ -19,4 +20,8 @@ interface IUrlTapperService {
      */
     fun doTapUrl(urlTapRequest: UrlTapRequest): UrlTapResponse
 
+    /**
+     * This service method helps to retrieve the existing long url by hashed url.
+     * @param shortUrl This is the short url passed to retrieve long url.     */
+    fun retrieveLongUrl(shortUrl: String): Optional<String>
 }

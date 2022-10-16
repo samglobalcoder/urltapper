@@ -1,7 +1,6 @@
 package com.codefactory.urltapper.service
 
 import com.codefactory.urltapper.dao.UrlDataDAO
-import com.codefactory.urltapper.dto.UrlGetRequest
 import com.codefactory.urltapper.dto.UrlTapRequest
 import com.codefactory.urltapper.repo.IUrlTapperRepository
 import com.codefactory.urltapper.service.impl.UrlTapperServiceImpl
@@ -28,9 +27,10 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class UrlTapperServiceUnitTests {
     private val hashedUrl =
-        "https://codefactory.com/01db1d92-d025-4df4-b010-3449a8eb1b8b"
+        "https://cf.com/01db1d92-d025-4df4-b010-3449a8eb1b8b"
 
-    private val longUrl = "https://en.wikipedia.org/wiki/Example.com"
+    private val longUrl =
+        "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
 
     private val noDomain =
         "https://www.test.com/9a45b9fefab03e8ab388b83fe3aaf76e48ea0329310a825e24c4f14f24a8d1f8"
@@ -46,18 +46,20 @@ class UrlTapperServiceUnitTests {
     }
 
     @Test
-    fun `Assert doTapUrl() function success when passing correct request`() {
+    fun `Assert doTapUrl() function given long url and then validate response`() {
         val repo = Mockito.mock(IUrlTapperRepository::class.java)
         val helper = Mockito.spy(UrlTapperHelper::class.java)
         val tapperService = UrlTapperServiceImpl(repo, helper)
         Mockito.`when`(repo.findOneShortUrl(Mockito.anyString()))
             .thenReturn(Optional.of(buildUrlDataDAO()))
+        //given the long url and when invoke the service layer
         val response = tapperService.doTapUrl(buildTapRequestSuccess())
+        //then validate the response
         Assertions.assertNotNull(response)
     }
 
     @Test
-    fun `Assert doTapUrl() function save scenario success`() {
+    fun `Assert doTapUrl() function given long url and then verify the saving with repsonse`() {
         val repo = Mockito.mock(IUrlTapperRepository::class.java)
         val helper = Mockito.spy(UrlTapperHelper::class.java)
         val tapperService = UrlTapperServiceImpl(repo, helper)
@@ -65,7 +67,9 @@ class UrlTapperServiceUnitTests {
             .thenReturn(Optional.empty())
         Mockito.`when`(repo.save(Mockito.any(UrlDataDAO::class.java)))
             .thenReturn(buildUrlDataDAO())
+        //given the long url and when invoke the service layer for saving
         val response = tapperService.doTapUrl(buildTapRequestSuccess())
+        //then validate the response
         Assertions.assertNotNull(response)
     }
 
@@ -76,14 +80,8 @@ class UrlTapperServiceUnitTests {
     }
 
     private fun buildUrlDataDAO(): UrlDataDAO = UrlDataDAO(
-        id = UUID.randomUUID(),
+
         shortUrl = hashedUrl,
         longUrl = longUrl
     )
-
-    private fun buildUrlGetRequestShortUrl(): UrlGetRequest {
-        val request = UrlGetRequest()
-        request.shortUrl = hashedUrl
-        return request
-    }
 }

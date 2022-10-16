@@ -1,14 +1,14 @@
 openapi: 3.0.1
 info:
   title: UrlTapper Rest Api
-  description: Tapping the length of the url and returning unique shortened url.
+  description: Tapping the length of the url and returning unique shortened url
   version: 0.0.1
 servers:
   - url: http://localhost:8080
     description: Generated server url
 tags:
-  - name: UrlTapper Rest Api Controller
-    description: This Controller provides tapurl and geturl API functions.
+  - name: UrlTapper Rest Api
+    description: Tapping the length of the url and returning unique shortened url
 paths:
   /v1/tapurl:
     post:
@@ -24,30 +24,48 @@ paths:
         required: true
       responses:
         '200':
-          description: OK
+          description: if the long url successfully generated the short url
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlTapResponse'
+        '400':
+          description: if the long url not found on the request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UrlTapResponse'
   /v1/geturl:
-    post:
+    get:
       tags:
         - UrlTapper Rest Api
       description: retrieve the long url
       operationId: getUrl
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UrlGetRequest'
-        required: true
+      parameters:
+        - name: shortUrl
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
-          description: OK
+        '302':
+          description: if the short url fetched and redirection happened successfully
           content:
-            application/json:
+            '*/*':
               schema:
-                $ref: '#/components/schemas/UrlGetResponse'
+                type: string
+        '400':
+          description: if the shore url not found on the request
+          content:
+            '*/*':
+              schema:
+                type: string
+        '404':
+          description: if the short url not found on the database
+          content:
+            '*/*':
+              schema:
+                type: string
 components:
   schemas:
     UrlTapRequest:
@@ -62,15 +80,3 @@ components:
         shortUrl:
           type: string
           description: hashed short link of the url
-    UrlGetRequest:
-      type: object
-      properties:
-        shortUrl:
-          type: string
-          description: hashed short link of the url
-    UrlGetResponse:
-      type: object
-      properties:
-        longUrl:
-          type: string
-          description: long link of the url

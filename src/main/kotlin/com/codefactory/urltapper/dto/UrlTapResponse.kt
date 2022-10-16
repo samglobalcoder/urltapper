@@ -8,14 +8,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @Date 15/10/22
  * @createdBy intelij
  */
-class UrlTapResponse() {
+class UrlTapResponse {
     @field:Schema(
         description = "hashed short link of the url",
         type = "string"
     )
     var shortUrl: String = ""
-        get() = field
-        set(value) {
-            field = value
-        }
 }
