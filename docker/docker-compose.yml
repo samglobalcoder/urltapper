@@ -1,0 +1,67 @@
+version: '3.7'
+services:
+  url-tapper:
+    #image:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/compose-postgres
+      SPRING_DATASOURCE_USERNAME: compose-postgres
+      SPRING_DATASOURCE_PASSWORD: compose-postgres
+    networks:
+      - url-tapper-network
+
+  db:
+    image: 'postgres:13.1-alpine'
+    container_name: db
+    environment:
+      - POSTGRES_USER=compose-postgres
+      - POSTGRES_PASSWORD=compose-postgres
+      - PGDATABASE=compose-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - url-tapper-network
+
+  prometheus:
+    image: prom/prometheus:v2.39.1
+    container_name: prometheus
+    restart: unless-stopped
+    depends_on:
+      - url-tapper
+    volumes:
+      - ./data/prometheus/config:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+    ports:
+      - 9090:9090
+    networks:
+      - url-tapper-network
+
+  grafana:
+    image: grafana/grafana-oss:9.2.0
+    pull_policy: always
+    container_name: grafana
+    restart: unless-stopped
+    user: root
+    ports:
+      - 3000:3000
+    links:
+      - prometheus:prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=localhost
+      - GF_LOG_MODE=console file
+      - GF_LOG_FILTERS=alerting.notifier.slack:debug alertmanager:debug ngalert:debug
+    networks:
+      - url-tapper-network
+      
+networks:
+  url-tapper-network:

@@ -21,7 +21,6 @@ class UrlTapperHelper {
      */
     fun hashBySHA256WithUTF8(strToBeHashed: String): String {
         val hashFunObj: HashFunction = Hashing.sha256()
-        val hashedVal = hashFunObj.hashString(strToBeHashed, StandardCharsets.UTF_8).toString()
-        return hashedVal
+        return hashFunObj.hashString(strToBeHashed, StandardCharsets.UTF_8).toString()
     }
 }

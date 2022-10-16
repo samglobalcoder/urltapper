@@ -7,6 +7,8 @@ import com.codefactory.urltapper.dto.UrlTapResponse
 import com.codefactory.urltapper.repo.IUrlTapperRepository
 import com.codefactory.urltapper.service.IUrlTapperService
 import com.codefactory.urltapper.utils.UrlTapperHelper
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -21,6 +23,8 @@ class UrlTapperServiceImpl(
     val tapperRepository: IUrlTapperRepository,
     val tapperHelper: UrlTapperHelper
 ) : IUrlTapperService {
+
+    private val logger: Logger = LoggerFactory.getLogger(UrlTapperServiceImpl::class.java)
 
     /**
      * This service method helps to either retrieve the existing hashed url or it will
@@ -41,6 +45,7 @@ class UrlTapperServiceImpl(
             //store the record
             val currentUrlData = tapperRepository.save(tapperDAO)
             urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + currentUrlData.id.toString().trim()
+            logger.debug(" Short url has created and stored in the database ")
             return urlTapResponse
         }
         urlTapResponse.shortUrl = UrlTapperConstants.URL_TAPPER_DOMAIN + existingUrlData.get().id.toString().trim()
@@ -56,6 +61,7 @@ class UrlTapperServiceImpl(
         val uuidFromURL = shortUrl
             .substring(UrlTapperConstants.URL_TAPPER_DOMAIN.length, shortUrl.length)
         val id = UUID.fromString(uuidFromURL)
+        logger.debug(" Fetching long url from database in progress.. ")
         return tapperRepository.findOneLongUrlByUUID(id)
     }
 }

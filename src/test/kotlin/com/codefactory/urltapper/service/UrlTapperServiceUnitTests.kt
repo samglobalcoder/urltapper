@@ -32,9 +32,6 @@ class UrlTapperServiceUnitTests {
     private val longUrl =
         "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
 
-    private val noDomain =
-        "https://www.test.com/9a45b9fefab03e8ab388b83fe3aaf76e48ea0329310a825e24c4f14f24a8d1f8"
-
     @BeforeEach
     fun setup() {
         MockitoAnnotations.openMocks(this)

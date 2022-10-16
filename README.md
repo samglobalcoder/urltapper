@@ -1,6 +1,7 @@
 # UrlTapper #
-###### v 0.0.1 - Draft initial version
+###### v 0.0.2 - Draft initial version
 ######  Author: Sam
+[![Java CI with Maven](https://github.com/samglobalcoder/urltapper/actions/workflows/maven.yml/badge.svg)](https://github.com/samglobalcoder/urltapper/blob/main/.github/workflows/maven.yml)
 
 # Description #
 #### This rest API helps the end user shorten the URL and can be retrieved via the hashing key or hashed URL.
@@ -9,49 +10,69 @@
 1. The user passes the long URL to one of the rest API methods, it has to generate the hashing which can be sent back to the user again.
 2. The user passes the shortened or hashed URL to one of the rest API methods, it has to send back the longer / actual URL to the end user.
 
-Based on the use case and Requirement document, we are adding the following input considered for designing this application,
+Based on the use case and requirement document, I have added the following input considered for designing this application,
 - scalable, maintainable , production ready API, easily deployed in any environments.
 - monitoring and study the complex problems through interfaces
 
 # Assumptions & Considerations #
 Since it's a minimum viable product, as a developer, I have taken the following assumption and consideration help to the design and development of API.
+
 1. This proof concept could be a full-fledged solution in the future.
 2. This API exposes two different functions outside the world.
 
-    a) tapUrl() - post the longer URL link and retrieve the hashed key or an URL.
-    b) getUrl() - post the shortened URL or hashed key and retrieve the longer URL.
+    a) tapUrl() - post the longer URL link and retrieve the hashed key or a URL.
 
-3. Since there is no specific ask on implementing the methods, I consider both methods post and which is reliable in 
-   terms of handling bigger request data and given a real thought on what would be the best thing for the end-user perspective.
+    b) getUrl() - get the shortened URL or hashed key and retrieve the longer URL.
+
+3. Since there is no specific ask on implementing the methods, I consider tapUrl for a post operation and getUrl for a get operation.
+   The post operation is reliable in terms of handling bigger request data and given a real thought on what would be the best thing for the end-user perspective.
 4. Both methods will be having minimal request validation for checking request input.
-5. There is an different hashing techniques have been followed, I have studied what's the best way to compensate for the
+5. There is a different hashing techniques have been followed, I have studied what's the best way to compensate for the
    performance and handle multiple requests at the same time. we have considered lots of loopholes when using lower 
    algorithms such as MD-5 / SHA-1 as per the recommendation SHA-256 could be used when compared with SHA-512.
    well-known third-part API implementation such as Guava / Apache Commons provides utility methods for hashing.
-6. There is a chance of bottlenecks in performance, hashing collisions, concurrent request processing, and ambiguity
-   which might be a critical aspect of the study required before and after solution development. certain aspects 
-   I would like to give as a note what are the pain areas.
+6. The tables currently stores shorturl(150) and longurl(2000) handle varying characters limit up to 2000 in size.
+7. However, I have indexed the shorturl column to increase the lookup performance.
+8. After successful hashing the UUID value will be returned to the end user.
+9. when a user wants to retrieve the actual URL, it can be resolved inside the postman browser, 
+   when making the actual test calls.But redirection not happening in the swagger page
+10. There is a chance of bottlenecks in performance, hashing collisions, concurrent request processing, and ambiguity
+    which might be a critical aspect of the study required before and after solution development. certain aspects
+    I would like to give as a note what are the pain areas.
 
-   There is a scenario that millions of records to be stored in the database might be a cumbersome activity,
-   additionally, retrieval also is a more time-consuming aspect.
-          
-         a) Index the columns is required 
-         b) Implementing the Load Balancer / High availability / Scaling of pods will be a key part of handling concurrent user requests and serving at downtimes.
-         c) Implementing the period offline deletion or archival component might help us to keep up the records for a certain time. It definitely added benefit 
-            for maintaining a large volume of shortening records.
-         d) Introducing the caching strategies between the application and database will help us to reduce the unnecessary call to the database when we do a lookup.
-         e) Currently I am assuming, when the user wants to retrieve the actual URL, it can be resolved inside the postman browser, when making the actual test calls,
+    There is a scenario that millions of records to be stored in the database might be a cumbersome activity,
+    additionally, retrieval also is a more time-consuming aspect.
+
+    **Implementing the Load Balancer / High availability / Scaling of pods will be a key part of handling concurrent user requests and serving at downtimes.**
+    **Implementing the period offline deletion or archival component might help us to keep up the records for a certain time. It definitely added benefit for maintaining a large volume of shortening records.**
+    **Introducing the caching strategies between the application and database will help us to reduce the unnecessary call to the database when we do a lookup.**
+    **Making smaller urls require more hashing techniques, that will be considered in future enhancements , because of the scope and time frame of this requirment.**
+
+
+
+# Non-Functional Approach
+
+* Grafana utilized for maintaining application status , health and performance in production scenario.
+* Container images can be scaled up during the downtime or if the high volume of records being processed.
+
+
+# Future Functional Enhancement
+
+* Hashing can be more optimized , since currently the SHA256 returns longer length, which reduce time for hashing.
+* Deletion of unused records using batches would be great choice to more optimize database calls
+* Indexing columns highly increase the faster query performance and less turn around time.
+* Optimize the size of column for long urls in database.
+* Request validation like whether the user sending an actual URL or which is a plain text needs to be implemented.
 
 # High Level Design
 
-## Diagram 1 ###
+## Architectural Diagram  ###
 ![](src/main/resources/static/design1.png)
 
-## tapUrl Flow ##
+## Operation tapUrl() Flow Steps ##
 
 1. Any user submitting a long URL for shortening to the tapUrl() function, will initially validate the request body has the long URL information 
-   (Technically we are checking whether the content is empty or not, i haven't really validated anything which is an actually a URL). 
-   if the missing fields, it will trigger the Validation Exception with a message.
+   Technically we are checking whether the content is empty  / length should be more than 20 size,  if its fails in condition, it will trigger the Validation Exception with a message.
 2. The long URL will be hashed using SHA-256 in the service layer, it will be checked against the database for whether the record is there or not.
 3. If the record is present, the service layer assumes this is an old record and the retrieved UUID value will be sent 
    back to the user with a custom domain URL.
@@ -59,11 +80,11 @@ Since it's a minimum viable product, as a developer, I have taken the following 
    The record will be stored with the id, hashed URL value, and long URL.
 5. if it's saved in the database the UUID will be appended with a custom domain URL and sent back to the user.
 
-## Diagram 2 ###
+## Flow Diagram ###
 ![](src/main/resources/static/img_4.png)
 
 
-## getUrl Flow ##
+## Operation getUrl() Flow Steps ##
 
 1. Any user submitting a shortened URL or hashed URL value to the getUrl() function,
    will initially be validated with field validation has the content which has the proper domain URL.
@@ -75,86 +96,31 @@ Since it's a minimum viable product, as a developer, I have taken the following 
 5. if the record is present, the long URL is retrieved and displayed. ideally, URL redirection will happen. 
    for the current scope the URL will be visible at the postman, but not in the swagger.
 
-## Diagram 3 ###
+## Flow diagram ###
 
 ![](src/main/resources/static/img_3.png)
 
-# Data Models Design
-
-## UrlTapRequest  ## 
-<code>
-{
-  "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
-}
-</code>
-
-## UrlTapResponse : HttpStatusCode - 200  ##
-<code>
-{
-    "shortUrl": "https://codefactory.com/d8d74b37-60c7-4689-b08a-b40bd55874a6"
-}
-</code>
-
-## UrlGetRequest : ##
-<code>
-{
-    "shortUrl": "https://codefactory.com/d8d74b37-60c7-4689-b08a-b40bd55874a6"
-}
-</code>
-
-## UrlGetResponse : HttpStatusCode - 200  ##
-<code>
-{
-  "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
-}
-</code>
-
-##  ValidationException | Error Code 400
-when long url value not found in the incoming request field of tapUrl()
-
-<code>
-{
-"message": " Long url not found in the request"
-}
-</code>
-
-##  ValidationException | Error Code 400
-when short url not found in the incoming request field of getUrl()
-
-<code>
-{
-"message": " Given short url is invalid"
-}
-</code>
-
-##  DataNotFoundException | Error Code 404
-when long url not found for the given shorten url of getUrl()
-
-<code>
-{
-"message": " Long link not found , please create new short link"
-}
-</code>
-
 # Developmental Setup for API development
 
+- Open JDK v 11 [jdk](https://openjdk.org/projects/jdk/11/)
+- Kotlin Programming [Kotlin](https://kotlinlang.org/)
 - Swagger contract design [swagger Editor](https://editor.swagger.io/)
 - Spring Boot 2.7.4 project creation with Kotlin  / dependencies setup [Spring initializer](https://start.spring.io/)
 - Configure the Docker and containerize postgresql database [Docker Setup ](https://www.docker.com/products/docker-desktop/)
-- Flyway is used for database migration.
-- Intelij Community Edition Required.
-- pgAdmin for console database query execution.
-- Operating System mac / windows / Linux /ubuntu
-- Terminal for command execution.
-- Postman for testing the API.
-- Junit / Mockito for writing Unit and integration testing
-
+- Flyway is used for database migration. [Postgresql db migration](https://flywaydb.org/documentation/database/postgresql)
+- IntelliJ Community Edition Required. [Intelij Community Edition](https://www.jetbrains.com/idea/download/#section=mac)
+- pgAdmin for console database query execution.[pgAdmin](https://www.pgadmin.org/)
+- Operating System mac Os [Mac OS Big Sur](https://en.wikipedia.org/wiki/MacOS_Big_Sur)
+- Terminal for command execution.[Terminal Commands](https://ss64.com/osx/)
+- Postman for testing the API. [Postman Testing Tools](https://www.postman.com/product/tools/)
+- Junit  / Mockito for writing Unit [Junit](https://junit.org/junit4/) [Mockito](https://site.mockito.org/)
+- Integration Testing by Test container [Post gres Test container](https://www.testcontainers.org/modules/databases/postgres/)
+- Apache Maven [Maven](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html)
+- Grafana [Grafana](https://grafana.com/grafana/download)
+- Prometheus [prometheus](https://prometheus.io/)
 
 ### Spring initializer - Project Setup ###
 ![img.png](src/main/resources/static/img.png)
-
-### Swagger Editor - Prepare & Modify the Contract ###
-![img_5.png](src/main/resources/static/img_5.png)
 
 ### Docker Desktop - Cloud environment ###
 ![img.png](src/main/resources/static/img3.png)
@@ -173,7 +139,11 @@ Spring - Boot / data - jpa v 2.7.4
 ***********************
 Kotlin v 1.7.20
 ***********************
-postgressql database 14 v 42.2.18
+postgreSQL database 14 v 42.2.18 / In docker used 13.1 due to start up issues.
+
+Note : Before starting up the local application, we have to create the database first. 
+some time onstartup database creation not working well with spring boot.
+
 **********************
 Springdoc - openAPI v 1.6.11
 ***********************
@@ -193,30 +163,351 @@ pg Admin v 4
 *************
 Post man v 9.2
 **************
-Flyway Db
+Flyway 8.5.3
+***************
+Prometheus V 2.39.1
+*******************
+Grafana V 9.2.0
 
 # Implementation
 
 Methodologies : saFe Agile / Test Driven Development
 
+As per the Agile fashion , we have to design the contract first using any Intelij provided open API plugin or swagger edition used.
+
+### Swagger Editor - Prepare & Modify the Contract ###
+![img_6.png](src/main/resources/static/img_6.png)
 
 
-TBD - Information has to be covered
+#  Local Development Environment Setup (ioS Based)  
+
+1. Set up a GitHub and create git repository.
+2. Use homebrew to install the proper open jdk version [open jdk11](https://formulae.brew.sh/formula/openjdk@11)
+3. Install the postgreSQL v 14 in the Application folder [postgreSQL Installation](https://www.postgresql.org/download/macosx/)
+4. Install the pg Admin V4 client tool helps to connect with postgreSQL and perform various database related operations. [pgAdmin install ](https://www.pgadmin.org/)
+5. Set up an initial Spring boot project with necessary postgresql dependencies / test containers / mockito / junit.
+6. Make sure database created as configured as in the yaml, This can be changed based on your naming convention.
+7. Use the pgAdmin tool to create the initial database.
+8. If flyway is added in the pom.xml the table automatically created (Refer : application.yaml) **whenever  you need you disable the flyway in pom.xml to have more control for your development**
+9. **Install the docker desktop in your local, its important test container environment has to be set by docker 
+ while we wamt to run the integration test.**
+10. Keep-up the Stackoverflow page in your chrome, always there is solution for your challenges you are facing. Happy Coding :) 
+
+# How to Create the postgreSQL server and Database Using pgAdmin
+
+Make sure postgreSQL running in your local(5432) and create the server instance first
+
+![img_9.png](src/main/resources/static/img_9.png)
+
+![img_10.png](src/main/resources/static/img_10.png)
+
+# Project Setup and Directories 
+
+organize the directories and packages makes easier to find relevant files. 
+
+![img_5.png](src/main/resources/static/img_5.png)
+
+# GitHub Project setup 
+
+![img_12.png](src/main/resources/static/img_12.png)
+
+# Prerequisite For Enabling Prometheus and Grafana
+
+- Ensure spring boot project integrated with two important pom.xml dependency.
+
+<code> 
+         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+</code>
+
+- Ensure the application.yaml file must have the below entries.
+
+<code>
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    health:
+      show-details: always
+<code>
+
+The spring actuator will send the application health details to prometheus . Grafana is atoolw when you can collect all the health information of the application
+using prometheus metrics. Grafana will display the information of the application.
 
 
-### Run ###
+
+### How To Run the Project in Local Docker Environment  ###
 
 - Get the source codes, and import it into your favorite IDE.
 
 <code> git clone GITHUB PROJECT LINK </code>
 
-- Run docker compose . A docker-compose.yml is provided in the root folder.
+- Run docker compose . A docker-compose.yml is provided under the root folder (/docker/)
+
+<code> docker compose build </code>
+
+-- we can byild the images  and starting of deployment in docker container.
+
+<code> docker compose up --build </code> 
+
+![img_20.png](src/main/resources/static/img_20.png)
 
 <code> docker-compose up </code>
 
-- Run UrlTapperApp.kt in IDE directly.
+![img_21.png](src/main/resources/static/img_21.png)
 
-TBD - Information has to be covered
+<code> docker-compose down </code>
+
+![img_31.png](src/main/resources/static/img_31.png)
+
+**To Scale up docker pods**
+
+<code>docker-compose up --scale url-tapper=3 </code>
+
+**postgresSQL Startup**
+
+![img_22.png](src/main/resources/static/img_22.png)
+
+**FLYway Startup**
+
+![img_23.png](src/main/resources/static/img_23.png)
+
+
+**Docker Deployed Images**
+
+![img_24.png](src/main/resources/static/img_24.png)
+
+**Prometheus Window**
+
+![img_25.png](src/main/resources/static/img_25.png)
+
+### Grafana & Prometheus Data Capturing
+
+After completing all requisite measures , we have to use docker to build & deploy our images by docker-compose.yaml under docker folder of the project
+
+**Below is the login information , after docker boot up all the application, you can check the grafana also started or not [Grafana](http://localhost:3000/)
+
+Username: admin
+Password: admin
+
+**Grafana Login - To Configure the datasource**
+
+![img_26.png](src/main/resources/static/img_26.png)
+
+**Grafana - Add datasource**
+
+![img_27.png](src/main/resources/static/img_27.png)
+
+**Grafana - Spring Monitor**
+
+![img_32.png](src/main/resources/static/img_32.png)
+
+**Grafana  - Data Source Saving**
+
+![img_28.png](src/main/resources/static/img_28.png)
+
+**Grafana  - Importing the Spring Monitor using import option**
+
+![img_30.png](src/main/resources/static/img_30.png)
+
+
+**Grafana  - After successful importing you able to see all the performance / bottleneck / Health in grafana**
+
+![img_29.png](src/main/resources/static/img_29.png)
+
+[Spring Boot 2.1](https://grafana.com/grafana/dashboards/11378)
+
+- To verify the compose configuration
+
+<code> docker compose config </code>
+
+- to stop the docker containers running applications
+
+<code> docker compose down </code>
+
+[Spring Boot 2.1](https://grafana.com/grafana/dashboards/11378)
+
+- To Run the Application Locally from the studio
+
+![img_5.png](src/main/resources/static/img_7.png)
+
+use the run configuration to run the application as well maven to compile the project
+
+<code> mvn clean compile package install </code>
+
+
+
+# How to Run the JUnits and Integration Tests  From Studio
+
+1. Select the Project Root folder from left side panel.
+2. When you right-Click, the context menu show you "Run All Tests"
+3. once you performed "Run all Tests" , you can see the studio console and integration test status.
+
+**Note :  Integration test execution,  Ensure Docker Setup / Database setup is working fine , you are able to start up the server locally**
+
+![img_8.png](src/main/resources/static/img_8.png)
+
+Docker will display all the containers instantiated and installed in docker
+
+![docker.png](src/main/resources/static/docker.png)
+
+# Log Analysis and Debugging
+
+Always we have to enable application level logging to see what;s going on while debuggging. Its helps narrow down 
+the root casue failure. so Logging is very important, I have enabled spring SL4J logging  [SLF4J](https://www.slf4j.org/manual.html)
+
+![img_11.png](src/main/resources/static/img_11.png)
+
+# Manual Test Execution
+
+### when Sending the Long URL, and Then it should receive the shortened URL with status code 200  ###
+
+**Request :** 
+
+<code>
+{
+  "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
+}
+</code>
+
+**Response :**
+
+<code>
+{
+    "shortUrl": "https://codefactory.com/d8d74b37-60c7-4689-b08a-b40bd55874a6"
+}
+</code>
+
+**Curl :**
+
+<code>
+curl --location --request POST 'http://localhost:8080/v1/tapurl' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
+}'
+</code>
+
+**Postman Result :**
+
+![img_17.png](src/main/resources/static/img_17.png)
+
+## When Passing the Short URL and Then expecting to the long URL  ##
+
+**Curl :**
+
+<code>
+curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https://cf.com/9d7e4c9c-dd0d-4565-90d0-87ce54697ae7' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
+}'
+</code>
+
+**Postman Result :**
+
+![img_18.png](src/main/resources/static/img_18.png)
+
+
+##  ValidationException | Error Code 400
+when long URL value is less than 20 character or not present, and then throw validation exception tapUrl()
+
+**Request :**
+<code>
+{
+    "message": " Long url not found in the request or very smaller in size"
+}
+</code>
+
+**Postman Result :**
+
+![img_14.png](src/main/resources/static/img_14.png)
+
+**Curl :**
+
+<code>
+curl --location --request POST 'http://localhost:8080/v1/tapurl' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "longUrl": "8"
+}'
+</code>
+
+##  ValidationException | Error Code 400
+when short url not found in the incoming request field of getUrl and then Validation Exception with Response Code()
+
+**Response :**
+
+<code>
+{
+"message": " Given short url is invalid"
+}
+</code>
+
+**Curl :**
+
+<code>
+curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https%3A%2f.com%2F74a07003-cfa7-47c5-8d07-2cf7ef2a335f' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
+}'
+</code>
+
+**Postman Result :**
+
+![img_13.png](src/main/resources/static/img_13.png)
+
+
+##  DataNotFoundException | Error Code 404
+when given dhort URL and Then long URL not found in database of getUrl()
+
+**Response :**
+
+<code>
+{
+    "message": " Long url not found , please create new short url"
+}
+</code>
+
+**Curl :**
+
+<code>
+curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https://cf.com/9d7e4c9c-dd0d-4565-90d0-87ce54697ae1' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
+}'
+</code>
+
+**Postman Result :**
+
+![img_19.png](src/main/resources/static/img_19.png)
+
+
+# GitHub Action for Enabling Build and Pipeline
+
+![img_15.png](src/main/resources/static/img_15.png)
+
+# Build Status for GitHub each of your code push and merge.
+
+![img_16.png](src/main/resources/static/img_16.png)
+
+# Build Status for GitHub each time when your code push and merge.
+
+![img_16.png](src/main/resources/static/img_16.png)
+
+
+
 
 ### Reference Documentation
 For further reference, please consider the following sections:
