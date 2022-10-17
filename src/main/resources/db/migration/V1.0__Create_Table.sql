@@ -1,6 +1,3 @@
--- Table: public.urldata
-
--- DROP TABLE IF EXISTS public.urldata;
 
 CREATE TABLE IF NOT EXISTS public.urldata
 (
@@ -12,3 +9,6 @@ CREATE TABLE IF NOT EXISTS public.urldata
 )
 
 TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS urldata_shorturl_idx
+    ON urldata(shorturl)

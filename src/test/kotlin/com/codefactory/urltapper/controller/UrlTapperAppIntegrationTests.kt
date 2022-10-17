@@ -98,10 +98,10 @@ class UrlTapperAppIntegrationTests(
     fun `Assert the getUrl() function, given shorten url and then validate the status code `() {
         //Given , There is a shortened url in the db with hashed value
         val uid = UUID.randomUUID()
-        val newShortUrl = "https://cf.com/" + uid
+        val newShortUrl = "https://cf.com/$uid"
         this.repository.save(UrlDataDAO(uid, longUrl, newShortUrl, LocalDateTime.now()))
         //when , we call the get url function
-        var uri = UriComponentsBuilder
+        val uri = UriComponentsBuilder
             .fromUriString("/v1/geturl")
             .queryParam("shortUrl", newShortUrl).toUriString()
         val resObj = restTemplate.getForEntity(uri, String::class.java)

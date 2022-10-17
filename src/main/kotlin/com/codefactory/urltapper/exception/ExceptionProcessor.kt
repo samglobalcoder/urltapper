@@ -1,6 +1,8 @@
 package com.codefactory.urltapper.exception
 
 import org.apache.commons.lang3.exception.ExceptionUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -18,12 +20,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 class ExceptionProcessor : ResponseEntityExceptionHandler() {
 
+    private val exceptionLogger: Logger = LoggerFactory.getLogger(ExceptionProcessor::class.java)
+
     /**
      * This method helps to handle very critical unhandled scenario,
      */
     @ExceptionHandler(Exception::class)
     fun handleDefaultException(ex: Exception): ResponseEntity<ErrorMessage?>? {
-        logger.error(" Unhandled Exception occurred , " + ExceptionUtils.getStackTrace(ex))
+        exceptionLogger.error(" Unhandled Exception occurred , " + ExceptionUtils.getStackTrace(ex))
         val errMsg = ErrorMessage(
             ex.message
         )
@@ -35,7 +39,7 @@ class ExceptionProcessor : ResponseEntityExceptionHandler() {
      */
     @ExceptionHandler(ValidationException::class)
     fun validationException(vx: ValidationException): ResponseEntity<ErrorMessage?>? {
-        logger.error("Validation failure happened ,  " + ExceptionUtils.getStackTrace(vx))
+        exceptionLogger.error("Validation failure happened ,  " + ExceptionUtils.getStackTrace(vx))
         val errMsg = ErrorMessage(vx.description)
         return ResponseEntity<ErrorMessage?>(errMsg, HttpStatus.BAD_REQUEST)
     }
@@ -46,7 +50,7 @@ class ExceptionProcessor : ResponseEntityExceptionHandler() {
      */
     @ExceptionHandler(DataNotFoundException::class)
     fun dataNotFoundException(dx: DataNotFoundException): ResponseEntity<ErrorMessage?>? {
-        logger.error("Data Not Found failure happened ,  " + ExceptionUtils.getStackTrace(dx))
+        exceptionLogger.error("Data Not Found failure happened ,  " + ExceptionUtils.getStackTrace(dx))
         val errMsg = ErrorMessage(dx.description)
         return ResponseEntity<ErrorMessage?>(errMsg, HttpStatus.NOT_FOUND)
     }
