@@ -215,7 +215,7 @@ organize the directories and packages makes easier to find relevant files.
 
 - Ensure spring boot project integrated with two important pom.xml dependency.
 
-<code> 
+````
          <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -225,11 +225,11 @@ organize the directories and packages makes easier to find relevant files.
             <artifactId>micrometer-registry-prometheus</artifactId>
             <scope>runtime</scope>
         </dependency>
-</code>
+````
 
 - Ensure the application.yaml file must have the below entries.
 
-<code>
+````
 management:
   endpoints:
     web:
@@ -238,7 +238,7 @@ management:
   endpoint:
     health:
       show-details: always
-<code>
+````
 
 The spring actuator will send the application health details to prometheus . Grafana is atoolw when you can collect all the health information of the application
 using prometheus metrics. Grafana will display the information of the application.
@@ -249,29 +249,29 @@ using prometheus metrics. Grafana will display the information of the applicatio
 
 - Get the source codes, and import it into your favorite IDE.
 
-<code> git clone GITHUB PROJECT LINK </code>
+```` git clone GITHUB PROJECT LINK ````
 
 - Run docker compose . A docker-compose.yml is provided under the root folder (/docker/)
 
-<code> docker compose build </code>
+```` docker compose build ````
 
 -- we can byild the images  and starting of deployment in docker container.
 
-<code> docker compose up --build </code> 
+```` docker compose up --build ````
 
 ![img_20.png](src/main/resources/static/img_20.png)
 
-<code> docker-compose up </code>
+```` docker-compose up ````
 
 ![img_21.png](src/main/resources/static/img_21.png)
 
-<code> docker-compose down </code>
+```` docker-compose down ````
 
 ![img_31.png](src/main/resources/static/img_31.png)
 
 **To Scale up docker pods**
 
-<code>docker-compose up --scale url-tapper=3 </code>
+````docker-compose up --scale url-tapper=3 ````
 
 **postgresSQL Startup**
 
@@ -280,7 +280,6 @@ using prometheus metrics. Grafana will display the information of the applicatio
 **FLYway Startup**
 
 ![img_23.png](src/main/resources/static/img_23.png)
-
 
 **Docker Deployed Images**
 
@@ -294,7 +293,7 @@ using prometheus metrics. Grafana will display the information of the applicatio
 
 After completing all requisite measures , we have to use docker to build & deploy our images by docker-compose.yaml under docker folder of the project
 
-**Below is the login information , after docker boot up all the application, you can check the grafana also started or not [Grafana](http://localhost:3000/)
+Below is the login information , after docker boot up all the application, you can check the grafana also started or not [Grafana](http://localhost:3000/)
 
 Username: admin
 Password: admin
@@ -328,11 +327,11 @@ Password: admin
 
 - To verify the compose configuration
 
-<code> docker compose config </code>
+```` docker compose config ````
 
 - to stop the docker containers running applications
 
-<code> docker compose down </code>
+```` docker compose down ````
 
 [Spring Boot 2.1](https://grafana.com/grafana/dashboards/11378)
 
@@ -342,7 +341,7 @@ Password: admin
 
 use the run configuration to run the application as well maven to compile the project
 
-<code> mvn clean compile package install </code>
+```` mvn clean compile package install ````
 
 
 
@@ -373,29 +372,29 @@ the root casue failure. so Logging is very important, I have enabled spring SL4J
 
 **Request :** 
 
-<code>
+````
 {
   "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
 }
-</code>
+````
 
 **Response :**
 
-<code>
+````
 {
     "shortUrl": "https://codefactory.com/d8d74b37-60c7-4689-b08a-b40bd55874a6"
 }
-</code>
+````
 
 **Curl :**
 
-<code>
+````
 curl --location --request POST 'http://localhost:8080/v1/tapurl' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "longUrl": "https://www.google.com/search?q=software+test+design+and+testing+methodologies&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjak6vvreL6AhVkXnwKHVBHBowQ_AUoAXoECAEQAw&biw=1920&bih=944&dpr=1#imgrc=BGg06cJSEFrjiM"
 }'
-</code>
+````
 
 **Postman Result :**
 
@@ -405,13 +404,13 @@ curl --location --request POST 'http://localhost:8080/v1/tapurl' \
 
 **Curl :**
 
-<code>
+````
 curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https://cf.com/9d7e4c9c-dd0d-4565-90d0-87ce54697ae7' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
 }'
-</code>
+````
 
 **Postman Result :**
 
@@ -422,11 +421,11 @@ curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https://
 when long URL value is less than 20 character or not present, and then throw validation exception tapUrl()
 
 **Request :**
-<code>
+````
 {
     "message": " Long url not found in the request or very smaller in size"
 }
-</code>
+````
 
 **Postman Result :**
 
@@ -434,34 +433,34 @@ when long URL value is less than 20 character or not present, and then throw val
 
 **Curl :**
 
-<code>
+````
 curl --location --request POST 'http://localhost:8080/v1/tapurl' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "longUrl": "8"
 }'
-</code>
+````
 
 ##  ValidationException | Error Code 400
 when short url not found in the incoming request field of getUrl and then Validation Exception with Response Code()
 
 **Response :**
 
-<code>
+````
 {
 "message": " Given short url is invalid"
 }
-</code>
+````
 
 **Curl :**
 
-<code>
+````
 curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https%3A%2f.com%2F74a07003-cfa7-47c5-8d07-2cf7ef2a335f' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
 }'
-</code>
+````
 
 **Postman Result :**
 
@@ -473,21 +472,21 @@ when given dhort URL and Then long URL not found in database of getUrl()
 
 **Response :**
 
-<code>
+````
 {
     "message": " Long url not found , please create new short url"
 }
-</code>
+````
 
 **Curl :**
 
-<code>
+````
 curl --location --request GET 'http://localhost:8080/v1/geturl?shortUrl=https://cf.com/9d7e4c9c-dd0d-4565-90d0-87ce54697ae1' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "shortUrl": "https://codefactory.com/urltapper/2e021d8a6f8820a6a20b07c6a2e7042b7d5807890245dd1aa061a4e30547bc5e"
 }'
-</code>
+````
 
 **Postman Result :**
 
